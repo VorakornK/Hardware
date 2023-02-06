@@ -27,7 +27,7 @@ void GET_post(){
   }
 }
 
-void GET_comments(String postid ){
+void GET_comments(String postid){
   DynamicJsonDocument doc(2048);
   const String url = baseUrl + "comments?postId=" + postid;
   HTTPClient http;
@@ -113,6 +113,10 @@ void Connect_Wifi() {
 void setup() {
   Serial.begin(115200);
   Connect_Wifi();
+  GET_post();
+  GET_comments("1");
+  POST_post();
+  PUT_post();
 }
 
 void loop() {
