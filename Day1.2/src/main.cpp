@@ -9,10 +9,6 @@ int stage = 0;
 int lumine = 0;
 Bounce debouncer = Bounce();
 
-int binary(int x) {
-  
-}
-
 void setup() {
     Serial.begin(115200);
     ledcSetup(0 , 5000, 8);
