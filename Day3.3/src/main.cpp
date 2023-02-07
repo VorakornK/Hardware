@@ -26,6 +26,20 @@ void Connect_Wifi();
 
 void task3(void *param);
 
+void LED_bright(void *param){
+  while(1){
+    for (int i = 0; i < 255; i++) {
+      ledcWrite(1, i);
+      vTaskDelay(5/portTICK_PERIOD_MS);
+    }
+    for (int i = 255; i > 0; i--) {
+      ledcWrite(1, i);
+      vTaskDelay(5/portTICK_PERIOD_MS);
+    }
+    vTaskDelay(1000/portTICK_PERIOD_MS);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   ledcSetup(0, 5000, 8);
@@ -38,21 +52,27 @@ void setup() {
   debouncer.interval(25);
   Connect_Wifi();
 
+  xTaskCreatePinnedToCore(LED_bright, "LED_bright", 1000, NULL, 2, &TaskB, 1);
   xTaskCreatePinnedToCore(task3, "task3", 100000, NULL, 1, &TaskA, 0);
 }
 
-void loop() {
-  // for (int i = 0; i < 255; i++) {
-  //   ledcWrite(1, i);
-  //   delay(5);
-  // }
-  // for (int i = 255; i > 0; i--) {
-  //   ledcWrite(1, i);
-  //   delay(5);
-  // }
-  // delay(1000);
+void loop()
+{
+  debouncer.update();
+    if(debouncer.fell()){
+      ledcWrite(0, 255);
+      unsigned long start = millis();
+      while (millis() - start < 5000)
+      {
+        debouncer.update();
+        if(debouncer.fell()){
+          ledcWrite(0, 0);
+          break;
+        }
+      }
+      ledcWrite(0, 0);
+  }
 }
-
 void Connect_Wifi() {
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
