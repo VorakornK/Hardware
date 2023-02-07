@@ -16,12 +16,15 @@ TaskHandle_t TaskB = NULL;
 
 int count = 0;
 
-const String url = "https://exceed-hardware-stamp465.koyeb.app/question";
+const String gurl = "https://exceed-hardware-stamp465.koyeb.app/question";
+const String surl = "https://exceed-hardware-stamp465.koyeb.app/answer";
 
 const char *ssid = "Qwerty";
 const char *password = "12345678";
 
 void Connect_Wifi();
+
+void task3();
 
 void setup() {
   Serial.begin(115200);
@@ -34,18 +37,19 @@ void setup() {
   debouncer.attach(BUTTON);
   debouncer.interval(25);
   Connect_Wifi();
+  task3();
 }
 
 void loop() {
-  for (int i = 0; i < 255; i++) {
-    ledcWrite(1, i);
-    delay(5);
-  }
-  for (int i = 255; i > 0; i--) {
-    ledcWrite(1, i);
-    delay(5);
-  }
-  delay(1000);
+  // for (int i = 0; i < 255; i++) {
+  //   ledcWrite(1, i);
+  //   delay(5);
+  // }
+  // for (int i = 255; i > 0; i--) {
+  //   ledcWrite(1, i);
+  //   delay(5);
+  // }
+  // delay(1000);
 }
 
 void Connect_Wifi() {
@@ -57,4 +61,76 @@ void Connect_Wifi() {
   }
   Serial.print("OK! IP=");
   Serial.println(WiFi.localIP());
+}
+
+void task3() {
+  int a, b, result;
+  String op, Id;
+  while (1) {
+    DynamicJsonDocument doc(512);
+    HTTPClient http;
+    http.begin(gurl);
+    int httpResponseCode = http.GET();
+    if (httpResponseCode >= 200 && httpResponseCode < 300) {
+        String payload = http.getString();
+        deserializeJson(doc, payload);
+        a = doc["a"].as<int>();
+        b = doc["b"].as<int>();
+        op = doc["op"].as<String>();
+        Id = doc["questionId"].as<String>();
+    }
+    else {
+        Serial.print("Error code: ");
+        Serial.println(httpResponseCode);
+        vTaskDelay(5000);
+        continue;
+    }
+    Serial.print("a = ");
+    Serial.println(a);
+    Serial.print("b = ");
+    Serial.println(b);
+    Serial.print("op = ");
+    Serial.println(op);
+    Serial.print("questionId = ");
+    Serial.println(Id);
+
+    if (op == "+") {
+      result = a + b;
+    }
+    else if (op == "-") {
+      result = a - b;
+    }
+    else if (op == "*") {
+      result = a * b;
+    }
+
+    Serial.print("result = ");
+    Serial.println(result);
+    Serial.print("questionId = ");
+    Serial.println(Id);
+
+    // time to send back
+    String json;
+    DynamicJsonDocument doc2(512);
+    doc2["questionId"] = Id;
+    doc2["result"] = result;
+    serializeJson(doc2, json);
+
+    http.begin(surl);
+    http.addHeader("Content-Type","application/json");
+
+    httpResponseCode = http.POST(json);
+    if (httpResponseCode >= 200 && httpResponseCode < 300) {
+      String payload = http.getString();
+      deserializeJson(doc, payload);
+      Serial.print("{message: ");
+      Serial.print(doc["message"].as<String>());
+      Serial.println("}");
+    }
+    else {
+        Serial.print("Error code: ");
+        Serial.println(httpResponseCode);
+    }
+    vTaskDelay(5000);
+  }
 }
