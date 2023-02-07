@@ -1,103 +1,89 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
+#include <string>
 
-const char *ssid = "vivo 1818";
-const char *password = "12345678";
 
-const String baseUrl = "https://jsonplaceholder.typicode.com/";
+// 0 = Green
+// 1 = Yellow
+// 2 = Red
 
-void GET_post(){
-  DynamicJsonDocument doc(2048);
-  const String url = baseUrl + "posts/1";
+const char *ssid = "ZodiaX";
+const char *password = "poom1234";
+
+const String baseUrl = "https://exceed-hardware-stamp465.koyeb.app";
+const String GroupNum = "1";
+const String AGurl = "https://exceed-hardware-stamp465.koyeb.app/all_traffic";
+
+const String GroupCode = "317cwk";
+
+
+const String point = "1";
+const int nearby_1 = 2;
+const int nearby_2 = 15;
+
+
+void GET_traffic() {
+  Serial.println("Start!!!");
+  DynamicJsonDocument doc(65536);
   HTTPClient http;
-  http.begin(url);
+  http.begin(AGurl);
+
+  Serial.println("Nearby traffic");
   int httpResponseCode = http.GET();
-  if (httpResponseCode >= 200 && httpResponseCode < 300) {
-    Serial.print("HTTP ");
-    Serial.println(httpResponseCode);
+  if (httpResponseCode == 200)
+  {
     String payload = http.getString();
-    deserializeJson(doc,payload);
-    Serial.println();
-    Serial.println((const char*)doc["title"]);
+    deserializeJson(doc, payload);
+    JsonArray all_traffic = doc["all_traffic"].as<JsonArray>();
+
+    Serial.println("Point: " + doc["all_traffic"][0]["point"].as<String>());
+    Serial.println("Traffic: " + doc["all_traffic"][0]["traffic"].as<String>());
+
+    Serial.println("Point: " + doc["all_traffic"][nearby_1 - 1]["point"].as<String>());
+    Serial.println("Traffic: " + doc["all_traffic"][1][nearby_1 - 1].as<String>());
+
+    Serial.println("Point: " + doc["all_traffic"][nearby_2 - 1]["point"].as<String>());
+    Serial.println("Traffic: " + doc["all_traffic"][nearby_2 - 1]["traffic"].as<String>());
   }
-  else {
-    Serial.print("Error code: ");
+  else
+  {
+    Serial.print("Error ");
     Serial.println(httpResponseCode);
   }
+
+  Serial.println("----------------------------------");
 }
 
-void GET_comments(String postid){
-  DynamicJsonDocument doc(2048);
-  const String url = baseUrl + "comments?postId=" + postid;
-  HTTPClient http;
-  http.begin(url);
-  int httpResponseCode = http.GET();
-
-  if (httpResponseCode >= 200 && httpResponseCode < 300) {
-    Serial.print("HTTP ");
-    Serial.println(httpResponseCode);
-    String payload = http.getString();
-    deserializeJson(doc,payload);
-
-    Serial.println();
-    Serial.println((const char*)doc[1]["email"]);
-    Serial.println((const char*)doc[1]["body"]);
-  }
-  else {
-    Serial.print("Error code: ");
-    Serial.println(httpResponseCode);
-  }
-}
-
-void POST_post(){
+void POST_traffic(String led)
+{
+  const String url = baseUrl + "/my_traffic?point=" + point;
   String json;
-  DynamicJsonDocument doc(2048);
-  doc["userId"] = 1;
-  doc["title"] = "Exceed AHHHHHH";
-  doc["body"] = "THIS IS BODY";
-  serializeJson(doc,json);
-
-  const String url = baseUrl + "posts";
   HTTPClient http;
   http.begin(url);
-  http.addHeader("Content-Type","application/json");
+  http.addHeader("Content-Type", "application/json");
 
+  DynamicJsonDocument doc(2048);
+  doc["code"] = "317cwk";
+  doc["traffic"] = led;
+  serializeJson(doc, json);
+
+  Serial.println("POST " + led);
   int httpResponseCode = http.POST(json);
-  if (httpResponseCode >= 200 && httpResponseCode < 300) {
-    Serial.print("HTTP ");
+  if (httpResponseCode == 200)
+  {
+    Serial.print("Done");
+    Serial.println();
+  }
+  else
+  {
+    Serial.print("Error ");
     Serial.println(httpResponseCode);
   }
-  else {
-    Serial.print("Error code: ");
-    Serial.println(httpResponseCode);
-  }
+
+  Serial.println("----------------------------------");
 }
 
-void PUT_post(){
-  String json;
-  DynamicJsonDocument doc(2048);
-  doc["userId"] = 1;
-  doc["title"] = "Exceed AHHHHHH 22";
-  doc["body"] = "THIS IS BODY XXX";
-  doc["id"] = 1;
-  serializeJson(doc,json);
-
-  const String url = baseUrl + "posts/1";
-  HTTPClient http;
-  http.begin(url);
-  http.addHeader("Content-Type","application/json");
-
-  int httpResponseCode = http.PUT(json);
-  if (httpResponseCode >= 200 && httpResponseCode < 300) {
-    Serial.print("HTTP ");
-    Serial.println(httpResponseCode);
-  }
-  else {
-    Serial.print("Error code: ");
-    Serial.println(httpResponseCode);
-  }
-}
 
 void Connect_Wifi() {
   WiFi.begin(ssid, password);
@@ -113,10 +99,8 @@ void Connect_Wifi() {
 void setup() {
   Serial.begin(115200);
   Connect_Wifi();
-  GET_post();
-  GET_comments("1");
-  POST_post();
-  PUT_post();
+  POST_traffic("Yellow");
+  GET_traffic();
 }
 
 void loop() {

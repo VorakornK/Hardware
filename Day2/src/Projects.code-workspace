@@ -1,0 +1,16 @@
+{
+  "folders": [
+	{
+		"path": "../.."
+	},
+	{
+		"name": "ex2-exceed-hardware-g1",
+		"path": "../../ex2-exceed-hardware-g1"
+	},
+	{
+		"name": "Day2",
+		"path": ".."
+	}
+],
+  "settings": {}
+}
