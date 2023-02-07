@@ -38,7 +38,7 @@ void setup() {
   debouncer.interval(25);
   Connect_Wifi();
 
-  xTaskCreatePinnedToCore(task3, "task3", 100000, NULL, 1, &TaskA, 1);
+  xTaskCreatePinnedToCore(task3, "task3", 100000, NULL, 1, &TaskA, 0);
 }
 
 void loop() {
