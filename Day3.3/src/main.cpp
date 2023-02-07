@@ -24,7 +24,7 @@ const char *password = "12345678";
 
 void Connect_Wifi();
 
-void task3();
+void task3(void *param);
 
 void setup() {
   Serial.begin(115200);
@@ -37,7 +37,8 @@ void setup() {
   debouncer.attach(BUTTON);
   debouncer.interval(25);
   Connect_Wifi();
-  task3();
+
+  xTaskCreatePinnedToCore(task3, "task3", 100000, NULL, 1, &TaskA, 1);
 }
 
 void loop() {
@@ -63,7 +64,7 @@ void Connect_Wifi() {
   Serial.println(WiFi.localIP());
 }
 
-void task3() {
+void task3(void *param) {
   int a, b, result;
   String op, Id;
   while (1) {
