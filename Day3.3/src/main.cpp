@@ -43,6 +43,7 @@ void LED_bright(void *param){
 void setup() {
   Serial.begin(115200);
   ledcSetup(0, 5000, 8);
+  ledcSetup(1, 5000, 8);
   ledcAttachPin(GREEN, 0);
   ledcAttachPin(YELLOW, 0);
   ledcAttachPin(RED, 0);
